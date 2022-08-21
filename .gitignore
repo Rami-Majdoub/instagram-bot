@@ -1,0 +1,6 @@
+node_modules
+.env
+yarn.lock
+sessions.json
+last_response.txt
+session.json
