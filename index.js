@@ -24,11 +24,10 @@ async function fakeLoad() {
   return await readFileSync(SESSEION_FILE_PATH);
 }
 
-const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-console.log(timestampToDate());
+console.log(" ".repeat(28) + timestampToDate());
 
 function timestampToDate(unix_timestamp){
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const date_ = unix_timestamp ? new Date(unix_timestamp * 1000): new Date();
   
   const year = date_.getFullYear();
@@ -46,19 +45,19 @@ async function getPosts(ig, user){
   const userFeed = ig.feed.user(targetUser.pk);
   try {
     const items = await userFeed.items();
-    const firstNPosts = items.slice(0, 5);
+    //const firstNPosts = items.slice(0, 5);
      
-    console.log(user);
-    firstNPosts.forEach(e => console.log(
+    console.log(`${user.padEnd(15)} ${timestampToDate(items[0].caption?.created_at || items[0].taken_at)}`);
+    /*firstNPosts.forEach(e => console.log(
       timestampToDate(e.caption?.created_at || e.taken_at)
       //+ ": "
       //+ ( e.caption?.text || "" )
       //+ "\n"
       )
-    );
-    console.log();
+    );*/
+    // console.log();
   } catch(e) {
-    console.log(user + ": " + e.message);
+    console.log(user.padEnd(15) + " " + e.message);
     return;
   }
 }
@@ -74,7 +73,27 @@ async function getStories(ig, user){
   const storyItems = await reelsFeed.items();
     
   // we can check items length and find out if the user does have any story to watch
-  console.log(`${targetUser.username.padEnd(20)} story has ${storyItems.length} items`);
+  console.log(`${targetUser.username.padEnd(15)} story has ${storyItems.length} items`);
+}
+
+async function getInfos(ig, user){
+  const targetUser = await ig.user.searchExact(user);
+
+  const reelsFeed = ig.feed.reelsMedia({
+    userIds: [targetUser.pk],
+  });
+  const storyItems = await reelsFeed.items();
+    
+  const userFeed = ig.feed.user(targetUser.pk);
+  let item0 = null;
+  try{
+    item0 = (await userFeed.items())[0];
+  } catch(e) {
+    // console.log(user.padEnd(15) + " " + e.message);
+  }
+  const item0date = item0 ? timestampToDate(item0?.caption?.created_at || item0?.taken_at): "null";
+
+  console.log(`${user.padEnd(15)} | ${storyItems.length} story | ${item0date}`);
 }
 
 (async () => {
@@ -95,9 +114,8 @@ async function getStories(ig, user){
   // This call will provoke request.end$ stream
   const auth = await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
   
-  process.env.IG_USER_IDS.split(", ").forEach( user => {
-  	getPosts(ig, user);
-  	getStories(ig, user);
+  process.env.IG_USER_IDS.replaceAll(" ", "").split(",").forEach( async (user) => {
+  	await getInfos(ig, user);
   })
   
 })();
