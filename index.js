@@ -46,9 +46,16 @@ async function getInfos(ig, user){
   // This call will provoke request.end$ stream
   const auth = await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
   
+  const users = process.env.IG_USER_IDS.replaceAll(" ", "").split(",");
+  for(let i = 0; i < users.length; i++){
+    const user = users[i];
+  	await getInfos(ig, user);
+  }
+  /*
   process.env.IG_USER_IDS.replaceAll(" ", "").split(",").forEach( async (user) => {
   	await getInfos(ig, user);
   })
+  */
   
 })();
 
